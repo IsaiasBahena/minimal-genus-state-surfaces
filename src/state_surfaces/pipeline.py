@@ -469,8 +469,8 @@ def compute_invariants(gauss_code: Any, state_code: Sequence[Sequence[int]]) -> 
     return {
         "unoriented_genus": genus,
         "crosscap": crosscap,
-        "is_simple": simple,
-        "is_two_sided": two_sided
+        "simple": simple,
+        "two_sided": two_sided
     }
 
 
@@ -492,8 +492,8 @@ def run_pipeline(gauss_code: Any | None = None, dt_code: Any | None = None) -> D
                 "state_code": state_code,
                 "unoriented_genus": ...,
                 "crosscap": ...,
-                "is_simple": ...,
-                "is_two_sided": ...,
+                "simple": ...,
+                "two_sided": ...,
             }
     """
 
