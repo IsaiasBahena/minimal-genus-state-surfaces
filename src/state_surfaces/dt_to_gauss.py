@@ -27,7 +27,10 @@ Notes
 
 from __future__ import annotations
 
-from typing import Iterable, List, Sequence
+from typing import Optional, Tuple, List
+
+import ast
+import json
 
 
 DTCode = List[List[int]]
@@ -42,6 +45,19 @@ def _normalize_dt(dt: object) -> DTCode:
       - list[int] as a single-component DT code
       - list[list[int]] as a multi-component DT code
     """
+
+    if isinstance(dt, str):
+        s = dt.strip()
+        if not s:
+            raise ValueError("DT code string is empty.")
+        try:
+            dt = json.loads(s)
+        except json.JSONDecodeError:
+            try:
+                dt = ast.literal_eval(s)
+            except (ValueError, SyntaxError) as e:
+                raise ValueError("DT code string could not be parsed as JSON or Python literal.") from e
+
     if isinstance(dt, (list, tuple)) and dt and all(isinstance(x, int) for x in dt):
         return [[abs(int(x)) for x in dt]]
 
@@ -92,9 +108,9 @@ def dt_to_gauss(dt: object) -> GaussCode:
     # Allocates a linear "pre-code" and "new-code"
     # of length 2 * total_pairs, then slices it into components.
     linear_len = 2 * total_pairs
-    pre_code: List[object] = [None] * linear_len
+    pre_code: List[Optional[Tuple[int, int]]] = [None] * linear_len
     new_code: List[int] = [0] * linear_len
-    pairs: List[tuple[int, int]] = []
+    pairs: List[Tuple[int, int]] = []
 
     # Fill pre_code by placing each pair twice: at position (2k) and (DT-1).
     k = 0
@@ -121,7 +137,10 @@ def dt_to_gauss(dt: object) -> GaussCode:
 
     # Label pairs in sorted order, 1..N (using dict lookup rather than list.index).
     pairs_sorted = sorted(pairs)
-    pair_to_label = {pair: idx + 1 for idx, pair in enumerate(pairs_sorted)}
+    pair_to_label: dict[Tuple[int, int], int] = {}
+    for idx, pair in enumerate(pairs_sorted):
+        if pair not in pair_to_label:
+            pair_to_label[pair] = idx + 1
 
     for idx, item in enumerate(pre_code):
         if item is None:
@@ -129,7 +148,7 @@ def dt_to_gauss(dt: object) -> GaussCode:
                 "DT→Gauss conversion failed: encountered an unfilled position. "
                 "The DT code may be malformed."
             )
-        new_code[idx] = pair_to_label[item]  # type: ignore[index]
+        new_code[idx] = pair_to_label[item]
 
     # Slice linear gauss word back into components (length 2*len(comp) each)
     out: GaussCode = []
