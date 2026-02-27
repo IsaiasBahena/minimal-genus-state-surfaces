@@ -73,7 +73,6 @@ def calculate_unoriented_genus(original_gauss_code: Any, state_code: Sequence[Se
         - s = number of state circles in the state code
 
     Notes:
-        - This matches the paper implementation.
         - We treat s = len(state_code), since each element of state_code is one state circle.
     """
 

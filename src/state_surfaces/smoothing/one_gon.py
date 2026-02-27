@@ -6,8 +6,6 @@ Identify and smooth 1-gons (monogons) in Gauss codes.
 A "1-gon" is detected when the same crossing label appears twice with ONLY
 already-smoothed crossings in between (possibly via wraparound in a cyclic list).
 
-This module mirrors the behavior/signatures used in the paper development code.
-
 Conventions
 -----------
 - A Gauss code can be either:
@@ -59,8 +57,7 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
     -----
     - For a detected 1-gon, the relevant component is rotated so the first
       occurrence used is at index 0 (start_position = 0 in the return).
-    - end_position is returned as an offset in the shifted component, consistent
-      with the paper code: (end - start) % n.
+    - end_position is returned as an offset in the shifted component: (end - start) % n.
     - pair is the tuple that gets appended to the state code (smoothed_pairs).
     """
     # If a single component is wrapped as [component], unwrap it (matches paper behavior)
@@ -87,15 +84,9 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
                     before = component[:i]
                     after = component[j + 1 :]
 
-                    only_smoothed_between = bool(smoothed_crossings) and all(
-                        c in smoothed_crossings for c in in_between
-                    )
-                    only_smoothed_before = bool(smoothed_crossings) and all(
-                        c in smoothed_crossings for c in before
-                    )
-                    only_smoothed_after = bool(smoothed_crossings) and all(
-                        c in smoothed_crossings for c in after
-                    )
+                    only_smoothed_between = all(c in smoothed_crossings for c in in_between)
+                    only_smoothed_before = all(c in smoothed_crossings for c in before)
+                    only_smoothed_after = all(c in smoothed_crossings for c in after)
 
                     # Non-wraparound 1-gon
                     if only_smoothed_between:

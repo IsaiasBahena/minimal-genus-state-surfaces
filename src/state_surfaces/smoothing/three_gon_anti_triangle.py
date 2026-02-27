@@ -3,7 +3,7 @@ three_gon_anti_triangle.py
 
 Anti-triangle (3-gon) smoothing for Gauss codes.
 
-This implementation exactly matches the logic used in the paper development code:
+This implementation:
 - Supports multi-component Gauss codes (single components are wrapped).
 - Shifts each involved component so the first triangle crossing appears at the front.
 - Constructs anti-triangle pairs subject to the usage-count-4 constraint.

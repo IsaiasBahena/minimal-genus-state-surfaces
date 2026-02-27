@@ -7,8 +7,6 @@ A "2-gon" is detected when two distinct crossings (a, b) appear in a pattern
 that supports a bigon smoothing, with ONLY already-smoothed crossings in the
 segments between occurrences (wraparound-aware because Gauss codes are cyclic).
 
-This module mirrors the behavior/signatures used in the paper development code.
-
 Conventions
 -----------
 - A Gauss code can be either:
@@ -17,7 +15,6 @@ Conventions
 
 - smoothed_crossings is a list[int] tracking which crossings are already smoothed.
 
-Return signatures are intentionally compatible with the paper pipeline.
 """
 
 from __future__ import annotations
@@ -71,11 +68,11 @@ def identify_2_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
     Notes
     -----
     - When a 2-gon is found, the involved component(s) are rotated so the first
-      relevant occurrence is at index 0 (matching the paper code).
+      relevant occurrence is at index 0.
     - Index outputs (a1,b1,a2,b2) are offsets in the shifted component(s), not
       absolute indices in the original unshifted components.
     """
-    # Unwrap single-list-in-list (a common intermediate form in the paper code)
+    # Unwrap single-list-in-list
     if not has_multiple_components(gauss_code) and isinstance(gauss_code, list) and gauss_code and isinstance(gauss_code[0], list):
         gauss_code = gauss_code[0]  # type: ignore[assignment,index]
 
@@ -427,7 +424,7 @@ def smooth_2_gon(gauss_code: GaussCode, case: int, a1: int, b1: int, a2: int, b2
 
     Notes
     -----
-    This function intentionally mirrors the paper behavior, including:
+    This function includes:
     - which segments are reversed
     - which new components are produced per case
     - the exact structure of `smoothed_pairs` (state circle tuple)
@@ -527,7 +524,6 @@ def smooth_2_gon(gauss_code: GaussCode, case: int, a1: int, b1: int, a2: int, b2
         s1 = comp1[a1 + 1 : b1]
         w0 = comp1[b1 + 1 :]
 
-        # In the paper code, s2 uses comp2[b2+1:a2] (with shifts making this meaningful)
         s2 = comp2[b2 + 1 : a2]
         w1 = comp2[a2 + 1 :]
 
