@@ -42,6 +42,45 @@ def _parse_input_value(raw: str) -> Any:
         return json.loads(raw)
     except json.JSONDecodeError:
         return raw
+    
+def _format_output(result: dict[str, Any], pretty: bool = False) -> str:
+    """
+    Format CLI output.
+
+    In pretty mode, keep gauss_code and state_code compact on one line while
+    printing the rest of the result in a readable format.
+    """
+    if not pretty:
+        return json.dumps(result, sort_keys=True)
+
+    lines = ["{"]
+    ordered_keys = [
+    "gauss_code",
+    "state_code",
+    "unoriented_genus",
+    "crosscap",
+    "simple",
+    "two_sided",
+    ]
+
+    items = [(key, result[key]) for key in ordered_keys if key in result]
+
+    for idx, (key, value) in enumerate(items):
+        comma = "," if idx < len(items) - 1 else ""
+
+        if key in {"gauss_code", "state_code"}:
+            if key == "state_code":
+                circles = ", ".join(str(tuple(circle)) for circle in value)
+                value_str = f"[{circles}]"
+            else:
+                value_str = json.dumps(value)
+            lines.append(f'  "{key}": {value_str}{comma}')
+        else:
+            value_str = json.dumps(value, indent=2)
+            lines.append(f'  "{key}": {value_str}{comma}')
+
+    lines.append("}")
+    return "\n".join(lines)
 
 
 def _build_arg_parser() -> argparse.ArgumentParser:
@@ -108,8 +147,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     result = run_pipeline(gauss_code=gauss_code, dt_code=dt_code)
 
-    indent = 2 if args.pretty else None
-    sys.stdout.write(json.dumps(result, indent=indent, sort_keys=True))
+    sys.stdout.write(_format_output(result, pretty=args.pretty))
     sys.stdout.write("\n")
     return 0
 
