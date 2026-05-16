@@ -26,7 +26,8 @@ from .genus import calculate_unoriented_genus
 from .nonorientable import calculate_crosscap_number, is_simple, is_two_sided
 from .smoothing.one_gon import identify_1_gon, smooth_1_gon
 from .smoothing.two_gon import identify_2_gon, smooth_2_gon
-from .smoothing.three_gon_triangle import identify_3_gon, smooth_3_gon_triangle
+from .smoothing.three_gon import identify_3_gon
+from .smoothing.three_gon_triangle import smooth_3_gon_triangle
 from .smoothing.three_gon_anti_triangle import smooth_3_gon_anti_triangle
 
 
