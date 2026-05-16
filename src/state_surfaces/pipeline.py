@@ -418,10 +418,9 @@ def _process_branch(gauss_code: Any, smoothed_crossings: List[int], smoothed_pai
                 for comp in gauss_code:
                     if all(c in smoothed_crossings for c in comp):
                         pair = tuple(comp)
-                        if pair not in smoothed_pairs:
-                            smoothed_pairs.append(pair)
+                        smoothed_pairs.append(pair)
 
-            break     
+            break  
 
 
     return smoothed_pairs
