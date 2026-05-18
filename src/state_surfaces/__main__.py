@@ -1,9 +1,6 @@
 """
-__main__.py
+Package entry point for running:
 
-Module entry point for the state_surfaces package.
-
-Allows the package to be executed with:
     python -m state_surfaces
 """
 

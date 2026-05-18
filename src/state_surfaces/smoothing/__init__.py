@@ -1,4 +1,6 @@
 """
-Smoothing routines for 1-gons, 2-gons and 3-gons
-used in the minimal genus state-surface algorithm.
+Smoothing routines used by the minimal genus state-surface algorithm.
+
+This package contains the implementations of 1-gon, 2-gon, and 3-gon
+identification and smoothing operations.
 """

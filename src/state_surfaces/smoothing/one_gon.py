@@ -1,35 +1,21 @@
 """
-smoothing/one_gon.py
+Identify and smooth 1-gons in Gauss codes.
 
-Identify and smooth 1-gons (monogons) in Gauss codes.
-
-A "1-gon" is detected when the same crossing label appears twice with ONLY
-already-smoothed crossings in between (possibly via wraparound in a cyclic list).
-
-Conventions
------------
-- A Gauss code can be either:
-    * single-component: list[int]
-    * multi-component:  list[list[int]]
-
-- smoothed_crossings is a list[int] tracking which crossings are already smoothed.
-
-Public API
-----------
-identify_1_gon(gauss_code, smoothed_crossings)
-smooth_1_gon(gauss_code, start_position, end_position, smoothed_crossings, component)
+A 1-gon is detected when the same crossing label appears twice with only
+already-smoothed crossings between the two occurrences. Since Gauss codes are
+cyclic, the in-between segment may also wrap around the end of a component.
 """
 
 from __future__ import annotations
 
-from typing import List, Tuple, Union, Optional
+from typing import List, Optional, Tuple, Union
 
 
 GaussCode = Union[List[int], List[List[int]]]
 
 
 def has_multiple_components(gauss_code: GaussCode) -> bool:
-    """True iff gauss_code is a list of >=2 components (each a list[int])."""
+    """Return True if the Gauss code has two or more components."""
     return (
         isinstance(gauss_code, list)
         and len(gauss_code) > 1
@@ -38,9 +24,10 @@ def has_multiple_components(gauss_code: GaussCode) -> bool:
 
 
 def shift_to_start(component: List[int], index: int) -> List[int]:
-    """Cyclically rotate component so that component[index] becomes first."""
+    """Cyclically rotate a component so that component[index] is first."""
     if not component:
         return []
+
     index %= len(component)
     return component[index:] + component[:index]
 
@@ -51,21 +38,22 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
 
     Returns
     -------
-    (component_idx, start_position, end_position, pair, found, updated_gauss_code)
+    tuple
+        (component_idx, start_position, end_position, pair, found, updated_gauss_code)
 
     Notes
     -----
-    - For a detected 1-gon, the relevant component is rotated so the first
-      occurrence used is at index 0 (start_position = 0 in the return).
-    - end_position is returned as an offset in the shifted component: (end - start) % n.
-    - pair is the tuple that gets appended to the state code (smoothed_pairs).
+    If a 1-gon is found, the relevant component is rotated so that the first
+    occurrence used for smoothing is at index 0.
     """
-    # If a single component is wrapped as [component], unwrap it (matches paper behavior)
-    if not has_multiple_components(gauss_code) and isinstance(gauss_code, list) and gauss_code and isinstance(gauss_code[0], list):
-        # type: ignore[assignment]
-        gauss_code = gauss_code[0]  # type: ignore[index]
+    if (
+        not has_multiple_components(gauss_code)
+        and isinstance(gauss_code, list)
+        and gauss_code
+        and isinstance(gauss_code[0], list)
+    ):
+        gauss_code = gauss_code[0]  # type: ignore[index, assignment]
 
-    # --- Multi-component case ---
     if has_multiple_components(gauss_code):
         comps: List[List[int]] = gauss_code  # type: ignore[assignment]
 
@@ -76,6 +64,7 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
 
             for i in range(n):
                 crossing = component[i]
+
                 for j in range(i + 1, n):
                     if component[j] != crossing:
                         continue
@@ -84,11 +73,12 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
                     before = component[:i]
                     after = component[j + 1 :]
 
-                    only_smoothed_between = all(c in smoothed_crossings for c in in_between)
+                    only_smoothed_between = all(
+                        c in smoothed_crossings for c in in_between
+                    )
                     only_smoothed_before = all(c in smoothed_crossings for c in before)
                     only_smoothed_after = all(c in smoothed_crossings for c in after)
 
-                    # Non-wraparound 1-gon
                     if only_smoothed_between:
                         start_position = i
                         end_position = j
@@ -107,7 +97,7 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
                             updated,
                         )
 
-                    # Wraparound 1-gon: the "between" segment crosses the end/start boundary
+                    # Wraparound 1-gon: the in-between segment crosses the component boundary.
                     if only_smoothed_before and only_smoothed_after:
                         start_position = j
                         end_position = i
@@ -128,14 +118,15 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
 
         return -1, None, None, None, False, gauss_code
 
-    # --- Single-component case ---
     comp: List[int] = gauss_code  # type: ignore[assignment]
     n = len(comp)
+
     if n == 0:
         return -1, None, None, None, False, gauss_code
 
     for i in range(n):
         crossing = comp[i]
+
         for j in range(i + 1, n):
             if comp[j] != crossing:
                 continue
@@ -160,6 +151,7 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
                 pair = (crossing, *in_between)
 
                 shifted = shift_to_start(comp, start_position)
+
                 return (
                     -1,
                     0,
@@ -169,12 +161,14 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
                     shifted,
                 )
 
+            # Wraparound 1-gon: the in-between segment crosses the component boundary.
             if only_smoothed_before and only_smoothed_after:
                 start_position = j
                 end_position = i
                 pair = (crossing, *after, *before)
 
                 shifted = shift_to_start(comp, start_position)
+
                 return (
                     -1,
                     0,
@@ -189,50 +183,47 @@ def identify_1_gon(gauss_code: GaussCode, smoothed_crossings: List[int],) -> Tup
 
 def smooth_1_gon(gauss_code: GaussCode, start_position: int, end_position: int, smoothed_crossings: List[int], component: int,) -> Tuple[GaussCode, List[int]]:
     """
-    Smooth a 1-gon that has already been shifted so its start is at index 0.
+    Smooth a 1-gon whose start has already been shifted to index 0.
 
     Parameters
     ----------
-    gauss_code : GaussCode
-        The Gauss code (already updated/shifted by identify_1_gon).
-    start_position : int
-        Kept for signature compatibility. Expected to be 0 after shifting.
-    end_position : int
-        Offset index in the shifted component pointing to the second occurrence
-        of the 1-gon crossing.
-    smoothed_crossings : list[int]
-        Updated in-place (and returned) by appending the 1-gon crossing.
-    component : int
-        Component index if multi-component; ignored for single-component.
+    gauss_code:
+        Gauss code already updated by `identify_1_gon`.
+    start_position:
+        Kept for compatibility with the smoothing interface.
+    end_position:
+        Offset of the second occurrence of the 1-gon crossing.
+    smoothed_crossings:
+        Crossings already smoothed.
+    component:
+        Component index for multi-component Gauss codes.
 
     Returns
     -------
-    (new_gauss_code, smoothed_crossings)
+    tuple
+        (new_gauss_code, updated_smoothed_crossings)
     """
-    # Multi-component
     if has_multiple_components(gauss_code):
         comps: List[List[int]] = gauss_code  # type: ignore[assignment]
         comp = comps[component]
+
         if not comp:
             return gauss_code, smoothed_crossings
 
-        a = comp[0]  # start is at 0 after shifting
-        if a not in smoothed_crossings:
-            smoothed_crossings.append(a)
+        crossing = comp[0]
+        if crossing not in smoothed_crossings:
+            smoothed_crossings.append(crossing)
 
-        # Remove the 1-gon (inclusive of both ends): keep everything from end_position onward
-        new_component = comp[end_position:]
-        comps[component] = new_component
+        comps[component] = comp[end_position:]
         return comps, smoothed_crossings
 
-    # Single-component
     comp: List[int] = gauss_code  # type: ignore[assignment]
+
     if not comp:
         return gauss_code, smoothed_crossings
 
-    a = comp[0]
-    if a not in smoothed_crossings:
-        smoothed_crossings.append(a)
+    crossing = comp[0]
+    if crossing not in smoothed_crossings:
+        smoothed_crossings.append(crossing)
 
-    new_gauss_code = comp[end_position:]
-    return new_gauss_code, smoothed_crossings
+    return comp[end_position:], smoothed_crossings

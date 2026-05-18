@@ -1,36 +1,27 @@
 """
-dt_to_gauss.py
-
-Convert a (multi-component) Dowker–Thistlethwaite (DT) code to a (multi-component)
-Gauss code in the format expected by this package.
+Convert Dowker–Thistlethwaite (DT) codes to Gauss codes.
 
 DT input format
 ---------------
-A DT code is a list of components; each component is a list of integers:
-    [[4, 6, 2]]                 # knot (1 component)
-    [[6, 10], [8, 2, 4]]        # link (2 components)
+A DT code is represented as a list of components, where each component is a
+list of integers:
+    [[4, 6, 2]]                 # knot
+    [[6, 10], [8, 2, 4]]        # link
 
-This converter accepts negative entries but uses absolute values.
+Negative DT entries are accepted, but absolute values are used.
 
 Gauss output format
 -------------------
-Returns list[list[int]] where each component is a cyclic Gauss word:
+Returns a list of cyclic Gauss words, one per component:
     [[1, 2, 3, 1, 2, 3]]
     [[1, 2, 3, 4], [5, 1, 2, 5, 4, 3]]
-
-Notes
------
-- Build "pairs" linking odd index labels (2k+1) to DT entries
-- Place each pair twice in a pre-code array
-- Sort pairs lexicographically, then label each occurrence by (sorted) pair index + 1
 """
 
 from __future__ import annotations
 
-from typing import Optional, Tuple, List
-
 import ast
 import json
+from typing import List, Optional, Tuple
 
 
 DTCode = List[List[int]]
@@ -105,8 +96,8 @@ def dt_to_gauss(dt: object) -> GaussCode:
     if total_pairs == 0:
         return [[] for _ in dt_list]
 
-    # Allocates a linear "pre-code" and "new-code"
-    # of length 2 * total_pairs, then slices it into components.
+    # Allocate linear arrays of length 2 * total_pairs, then slice the
+    # completed Gauss word back into components.
     linear_len = 2 * total_pairs
     pre_code: List[Optional[Tuple[int, int]]] = [None] * linear_len
     new_code: List[int] = [0] * linear_len

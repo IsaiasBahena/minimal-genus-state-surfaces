@@ -1,4 +1,6 @@
-# tests/test_pipeline_regression.py
+"""
+Regression tests for the full state-surface pipeline.
+"""
 
 from state_surfaces import run_pipeline
 
@@ -24,6 +26,11 @@ def test_special_two_component_link_preserves_duplicate_state_circles():
 
 
 def test_8_18_regression():
+    """
+    Regression test for a previously verified 8-crossing example.
+
+    This protects against accidental changes in recursive smoothing behavior.
+    """
     result = run_pipeline(
         gauss_code=[[1, 2, 3, 4, 5, 1, 6, 3, 7, 5, 8, 6, 2, 7, 4, 8]]
     )

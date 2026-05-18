@@ -1,12 +1,11 @@
 """
-nonorientable.py
+Utilities for determining nonorientable surface properties of a state surface.
 
-Utilities for determining nonorientable surface properties of a state surface,
-including simplicity, sidedness, and crosscap number.
-
-These functions operate purely on a state code:
+These functions operate purely on state codes:
     state_code = list[tuple[int, ...]]
 """
+
+from __future__ import annotations
 
 from collections import defaultdict
 from typing import List, Tuple
@@ -52,7 +51,8 @@ def is_two_sided(state_code: StateCode) -> bool:
             in_b = any(x in assigned for x in circle_set & set(sum(bucket_b, ())))
 
             if in_a and in_b:
-                return False  # conflict → not two-sided
+                # Conflict detected: the surface cannot be two-sided.
+                return False
 
             if in_a:
                 bucket_b.append(circle)
@@ -68,7 +68,7 @@ def is_two_sided(state_code: StateCode) -> bool:
         for circle in to_remove:
             remaining.remove(circle)
 
-    def has_duplicates(bucket):
+    def has_duplicates(bucket: list[tuple[int, ...]]) -> bool:
         flat = [x for circle in bucket for x in circle]
         return len(flat) != len(set(flat))
 
@@ -83,8 +83,7 @@ def is_simple(state_code: StateCode) -> bool:
     Determine whether a state surface is simple.
 
     A state surface is simple if no unordered pair of crossings appears
-    in more than one *distinct* state circle unless the circles are
-    identical.
+    in more than one distinct state circle unless those circles are identical.
 
     Returns
     -------
@@ -141,4 +140,5 @@ def calculate_crosscap_number(unoriented_genus: int, state_code: StateCode) -> i
 
     if sided and simple:
         return unoriented_genus + 1
+
     return unoriented_genus

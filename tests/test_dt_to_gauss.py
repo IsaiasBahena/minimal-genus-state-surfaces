@@ -1,3 +1,7 @@
+"""
+Regression tests for DT-to-Gauss conversion utilities.
+"""
+
 import pytest
 
 from state_surfaces.dt_to_gauss import dt_to_gauss

@@ -1,11 +1,9 @@
 """
-core.py
-
 High-level public API for the state_surfaces package.
 
-This module is intentionally lightweight: it wraps the smoothing pipeline and
-returns a structured result (with a convenient dict conversion) for downstream
-use in the CLI, scripts, or notebooks.
+This module provides a lightweight wrapper around the recursive smoothing
+pipeline and returns structured results suitable for scripts, notebooks, or
+the command-line interface.
 """
 
 from __future__ import annotations
@@ -51,7 +49,8 @@ def analyze(*, gauss_code: Any = None, dt_code: Optional[str] = None,) -> StateS
           - list[list[int]] (multi-component),
           - or supported string notations.
     dt_code:
-        Optional DT code string (if provided, it will be converted to a Gauss code).
+        Optional DT code input. If provided, it will be converted to a Gauss code
+        before running the smoothing pipeline.
 
     Returns
     -------

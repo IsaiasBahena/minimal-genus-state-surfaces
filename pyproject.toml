@@ -7,15 +7,23 @@ name = "minimal-genus-state-surfaces"
 version = "0.1.0"
 description = "Algorithms for computing minimal genus state surfaces from Gauss codes"
 readme = "README.md"
+requires-python = ">=3.9"
+
 authors = [
     { name = "Isaias Bahena" },
     { name = "Thomas Kindred" },
     { name = "Jason Parsley" },
 ]
-requires-python = ">=3.9"
 
 dependencies = [
     "tqdm",
+]
+
+keywords = [
+    "knot-theory",
+    "gauss-codes",
+    "topology",
+    "state-surfaces",
 ]
 
 [tool.pytest.ini_options]

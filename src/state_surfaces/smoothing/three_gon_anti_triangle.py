@@ -1,25 +1,20 @@
 """
-three_gon_anti_triangle.py
+Anti-triangle smoothing for 3-gons in Gauss codes.
 
-Anti-triangle (3-gon) smoothing for Gauss codes.
-
-This implementation:
-- Supports multi-component Gauss codes (single components are wrapped).
-- Shifts each involved component so the first triangle crossing appears at the front.
-- Constructs anti-triangle pairs subject to the usage-count-4 constraint.
-- Labels pairs alternately as s/w and chains them with the same ordering rules.
-- Enforces the consecutive same-component constraint.
-- Does NOT add a state circle (anti-triangle smoothing produces no state pair).
+Anti-triangle smoothing updates the Gauss code and smoothed crossings, but does
+not add a state circle to the state code. The implementation supports both
+single-component and multi-component Gauss codes.
 """
 
 from __future__ import annotations
 
 import copy
 from collections import defaultdict
-from typing import List, Tuple, Dict, Any
+from typing import Any, Dict, List, Tuple
 
 
 def _is_list_of_ints(x: Any) -> bool:
+    """Return True if x is a list containing only integers."""
     return isinstance(x, list) and all(isinstance(v, int) for v in x)
 
 
@@ -39,11 +34,13 @@ def shift_to_start(component: List[int], index: int) -> List[int]:
 
 
 def _forward_dist(cur: int, idx: int, total: int) -> int:
+    """Return cyclic forward distance from cur to idx."""
     d = (idx - cur) % total
     return d if d != 0 else total
 
 
 def _backward_dist(cur: int, idx: int, total: int) -> int:
+    """Return cyclic backward distance from cur to idx."""
     d = (cur - idx) % total
     return d if d != 0 else total
 
@@ -73,7 +70,7 @@ def smooth_3_gon_anti_triangle(gauss_code: Any, triangle_crossings: Tuple[int, i
     gauss_code = _ensure_components(gauss_code)
     code_copy = copy.deepcopy(gauss_code)
 
-    # --- Step 1: shift relevant components ---
+    # Step 1: Shift relevant components.
     shift_map: Dict[int, Tuple[int, Tuple[int, int]]] = {}
     for comp_idx, start_idx, end_idx in [(c1, i1, j1), (c2, i2, j2), (c3, i3, j3)]:
         if comp_idx not in shift_map or start_idx < shift_map[comp_idx][0]:
@@ -82,7 +79,7 @@ def smooth_3_gon_anti_triangle(gauss_code: Any, triangle_crossings: Tuple[int, i
     for comp_idx, (shift_idx, _) in shift_map.items():
         code_copy[comp_idx] = shift_to_start(code_copy[comp_idx], shift_idx)
 
-    # --- Step 2: build anti-triangle pairs ---
+    # Step 2: Build anti-triangle pairs.
     anti_triangle_pairs = []
     usage_count = defaultdict(int)
     triangle_set = set(triangle_crossings)
@@ -110,13 +107,13 @@ def smooth_3_gon_anti_triangle(gauss_code: Any, triangle_crossings: Tuple[int, i
                     usage_count[end] += 1
                     break
 
-    # --- Step 3: label pairs alternately s/w ---
+    # Step 3: Label pairs alternately s/w.
     labeled_pairs = []
     for idx, pair in enumerate(anti_triangle_pairs):
         label = f"{idx + 1}{'s' if idx % 2 == 0 else 'w'}"
         labeled_pairs.append((label, pair))
 
-    # --- Step 4: same-component neighbor ring ---
+    # Step 4: Same-component neighbor ring.
     comp_to_indices = defaultdict(list)
     for idx, (_, (_, _, _, comp_idx)) in enumerate(labeled_pairs):
         comp_to_indices[comp_idx].append(idx)
@@ -136,7 +133,7 @@ def smooth_3_gon_anti_triangle(gauss_code: Any, triangle_crossings: Tuple[int, i
             return cand_idx == next_in and cand_side == "start"
         return cand_idx == prev_in and cand_side == "end"
 
-    # --- Step 5: chain pairs into components ---
+    # Step 5: Chain pairs into components.
     smoothed_components = []
     used_indices = set()
     total_pairs = len(labeled_pairs)
@@ -277,13 +274,13 @@ def smooth_3_gon_anti_triangle(gauss_code: Any, triangle_crossings: Tuple[int, i
 
         smoothed_components.append(component)
 
-    # --- Step 6: add unaffected components ---
+    # Step 6: Add unaffected components.
     affected = {c1, c2, c3}
     for idx, comp in enumerate(gauss_code):
         if idx not in affected:
             smoothed_components.append(comp)
 
-    # --- Step 7: update smoothed crossings ---
+    # Step 7: Update smoothed crossings.
     for c in triangle_crossings:
         if c not in smoothed_crossings:
             smoothed_crossings.append(c)

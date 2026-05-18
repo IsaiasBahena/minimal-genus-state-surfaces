@@ -7,6 +7,7 @@ The script exits immediately on the first mismatch.
 import ast
 import csv
 from pathlib import Path
+from typing import Any
 
 from tqdm import tqdm
 from state_surfaces import run_pipeline
@@ -28,17 +29,17 @@ REFERENCE_CSV_FILES = [
 ]
 
 
-def normalize_state_code(value):
+def normalize_state_code(value: Any) -> list[tuple[int, ...]]:
     if isinstance(value, str):
         value = ast.literal_eval(value)
     return [tuple(circle) for circle in value]
 
 
-def parse_bool(value):
+def parse_bool(value: Any) -> bool:
     return str(value).strip().lower() == "true"
 
 
-def check_csv(csv_path):
+def check_csv(csv_path: str | Path) -> int:
     csv_path = Path(csv_path)
     if not csv_path.exists():
         raise FileNotFoundError(f"CSV file not found: {csv_path}")
@@ -99,7 +100,7 @@ def check_csv(csv_path):
     return len(rows)
 
 
-def main():
+def main() -> None:
     total_rows = 0
 
     for csv_file in REFERENCE_CSV_FILES:
