@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minimal-genus-state-surfaces"
+version = "0.1.0"
+description = "Algorithms for computing minimal genus state surfaces from Gauss codes"
+readme = "README.md"
+authors = [
+    { name = "Isaias Bahena" },
+    { name = "Thomas Kindred" },
+    { name = "Jason Parsley" },
+]
+requires-python = ">=3.9"
+
+dependencies = [
+    "tqdm",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
