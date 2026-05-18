@@ -123,6 +123,7 @@ def smooth_3_gon_anti_triangle(gauss_code: Any, triangle_crossings: Tuple[int, i
 
     samecomp_neighbors = {}
     for comp, idxs in comp_to_indices.items():
+        idxs.sort()
         m = len(idxs)
         for k, cur in enumerate(idxs):
             samecomp_neighbors[cur] = (idxs[(k - 1) % m], idxs[(k + 1) % m])
@@ -137,65 +138,141 @@ def smooth_3_gon_anti_triangle(gauss_code: Any, triangle_crossings: Tuple[int, i
 
     # --- Step 5: chain pairs into components ---
     smoothed_components = []
-    used = set()
-    total = len(labeled_pairs)
+    used_indices = set()
+    total_pairs = len(labeled_pairs)
 
-    while len(used) < total:
-        for idx, (label, (s, seg, e, _)) in enumerate(labeled_pairs):
-            if idx not in used:
-                component = [s] + seg
-                current = e
+    while len(used_indices) < total_pairs:
+        # Seed a new component with the first unused pair
+        for idx, (label, (start, segment, end, _)) in enumerate(labeled_pairs):
+            if idx not in used_indices:
+                component = [start] + segment
+                current_crossing = end
                 current_idx = idx
-                used.add(idx)
-                expect_s = label.endswith("s")
+                used_indices.add(idx)
+                expect_word = label.endswith("s")
                 last_side = "end"
-                scan_dir = "forward"
                 break
         else:
             break
 
+        scan_dir = "forward"
+
         while True:
+            found = False
             candidates = []
-            for idx, (label, (s, seg, e, comp_idx)) in enumerate(labeled_pairs):
-                if idx in used or label.endswith("s") == expect_s:
+
+            for idx, (label, (s, segment, e, comp_of_pair)) in enumerate(labeled_pairs):
+                if idx in used_indices:
+                    continue
+                if label.endswith("s") == expect_word:
                     continue
 
-                if s == current:
-                    candidates.append((idx, "start", "forward", s, seg, e, comp_idx))
-                elif e == current:
-                    candidates.append((idx, "end", "reverse", s, seg, e, comp_idx))
+                if s != e:
+                    if current_crossing == s:
+                        cand_side = "start"
+                        write_dir = "forward"
+                    elif current_crossing == e:
+                        cand_side = "end"
+                        write_dir = "reverse"
+                    else:
+                        continue
+
+                    candidates.append({
+                        "idx": idx,
+                        "label": label,
+                        "s": s,
+                        "e": e,
+                        "seg": segment,
+                        "cand_side": cand_side,
+                        "write_dir": write_dir,
+                        "comp": comp_of_pair,
+                    })
+
+                else:
+                    if current_crossing != s:
+                        continue
+
+                    candidates.append({
+                        "idx": idx,
+                        "label": label,
+                        "s": s,
+                        "e": e,
+                        "seg": segment,
+                        "cand_side": "start",
+                        "write_dir": "forward",
+                        "comp": comp_of_pair,
+                    })
+                    candidates.append({
+                        "idx": idx,
+                        "label": label,
+                        "s": s,
+                        "e": e,
+                        "seg": segment,
+                        "cand_side": "end",
+                        "write_dir": "reverse",
+                        "comp": comp_of_pair,
+                    })
 
             if not candidates:
                 break
 
             if last_side == "end":
-                candidates.sort(key=lambda x: _forward_dist(current_idx, x[0], total))
-            else:
-                candidates.sort(key=lambda x: _backward_dist(current_idx, x[0], total))
+                for cand in candidates:
+                    cand["dist"] = _forward_dist(current_idx, cand["idx"], total_pairs)
+                candidates.sort(key=lambda cand: (cand["dist"], cand["idx"]))
 
-            for idx, side, direction, s, seg, e, comp_idx in candidates:
-                prev_comp = labeled_pairs[current_idx][1][3]
-                if comp_idx == prev_comp and violates_consecutive(current_idx, idx, side, scan_dir):
+            elif last_side == "start":
+                for cand in candidates:
+                    cand["dist"] = _backward_dist(current_idx, cand["idx"], total_pairs)
+                candidates.sort(key=lambda cand: (cand["dist"], (-cand["idx"]) % total_pairs))
+
+            else:
+                for cand in candidates:
+                    cand["dist"] = _forward_dist(current_idx, cand["idx"], total_pairs)
+                candidates.sort(key=lambda cand: (cand["dist"], cand["idx"]))
+
+            prev_comp = labeled_pairs[current_idx][1][3]
+
+            for cand in candidates:
+                idx = cand["idx"]
+                s = cand["s"]
+                e = cand["e"]
+                segment = cand["seg"]
+                cand_side = cand["cand_side"]
+                write_dir = cand["write_dir"]
+                cand_comp = cand["comp"]
+
+                same_component = cand_comp == prev_comp
+
+                if same_component and violates_consecutive(
+                    current_idx,
+                    idx,
+                    cand_side,
+                    scan_dir,
+                ):
                     continue
 
-                if direction == "forward":
+                if write_dir == "forward":
                     component.append(s)
-                    component.extend(seg)
-                    current = e
+                    component.extend(segment)
+                    current_crossing = e
                     last_side = "end"
                     scan_dir = "forward"
+
                 else:
                     component.append(e)
-                    component.extend(reversed(seg))
-                    current = s
+                    component.extend(reversed(segment))
+                    current_crossing = s
                     last_side = "start"
                     scan_dir = "backward"
 
-                used.add(idx)
+                used_indices.add(idx)
                 current_idx = idx
-                expect_s = not expect_s
+                expect_word = not expect_word
+                found = True
                 break
-            else:
+
+            if not found:
                 break
 
         smoothed_components.append(component)
