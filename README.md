@@ -180,7 +180,6 @@ The final state code is then used to compute:
 ```text
 .github/workflows/     GitHub Actions CI
 data/                  Reference CSV datasets
-
 docs/                  Additional documentation
 examples/              Example input files
 scripts/               Utility and validation scripts
